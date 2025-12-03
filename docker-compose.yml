@@ -1,0 +1,27 @@
+services:
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: open-webui
+    ports:
+      - "3000:8080"
+    volumes:
+      - open-webui:/app/backend/data
+    environment:
+      # Disable Ollama since we're using LM Studio
+      - ENABLE_OLLAMA_API=false
+      # Enable OpenAI API (LM Studio is OpenAI-compatible)
+      - ENABLE_OPENAI_API=true
+      # Point to LM Studio running on host machine
+      - OPENAI_API_BASE_URL=http://host.docker.internal:1234/v1
+      # LM Studio doesn't require an API key, but Open WebUI needs something
+      - OPENAI_API_KEY=lm-studio
+      # Allow signup for first user (becomes admin)
+      - WEBUI_AUTH=true
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+volumes:
+  open-webui:
+
+
