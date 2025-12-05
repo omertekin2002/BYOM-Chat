@@ -13,6 +13,7 @@ trap 'echo ""; echo "👋 Shutting down..."; exit 0' INT TERM
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SOURCE_DIR="$SCRIPT_DIR/open-webui-source"
 BACKEND_DIR="$SOURCE_DIR/backend"
+VENV_DIR="$SCRIPT_DIR/.venv"
 
 echo "🚀 BYOM Chat - Development Mode (with Sora)"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -30,13 +31,25 @@ if ! command -v python3 &> /dev/null; then
     exit 1
 fi
 
+# Create virtual environment if it doesn't exist
+if [ ! -d "$VENV_DIR" ]; then
+    echo "📦 Creating virtual environment (first time only)..."
+    python3 -m venv "$VENV_DIR"
+    echo "   ✅ Virtual environment created"
+    echo ""
+fi
+
+# Activate virtual environment
+source "$VENV_DIR/bin/activate"
+
 # Check if dependencies are installed
-if [ ! -f "$BACKEND_DIR/.deps_installed" ]; then
+if [ ! -f "$VENV_DIR/.deps_installed" ]; then
     echo "📦 Installing backend dependencies (first time only)..."
     echo "   This may take a few minutes..."
     cd "$BACKEND_DIR"
-    python3 -m pip install -r requirements.txt -q
-    touch .deps_installed
+    pip install --upgrade pip -q
+    pip install -r requirements.txt -q
+    touch "$VENV_DIR/.deps_installed"
     echo "   ✅ Dependencies installed"
     echo ""
 fi
@@ -71,4 +84,3 @@ export ENABLE_OLLAMA_API="false"
 
 # Run the backend
 exec python -m open_webui.main
-
