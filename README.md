@@ -1,11 +1,8 @@
 # BYOM Chat - Bring Your Own Model
 
-A self-hosted AI chat interface using Open WebUI connected to LM Studio, with **custom Sora video generation support**.
+A self-hosted AI chat interface using Open WebUI. Works **standalone with cloud APIs** or connected to **local models via LM Studio**. Includes **custom Sora video generation support**.
 
-## Quick Start (Native - No Docker)
-
-### Prerequisites
-- LM Studio running with local server enabled at `http://127.0.0.1:1234`
+## Quick Start
 
 ### One-Time Setup
 
@@ -18,55 +15,65 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 ### Start the Chat Interface
 
 ```bash
-DATA_DIR=~/.open-webui \
-OPENAI_API_BASE_URL=http://127.0.0.1:1234/v1 \
-OPENAI_API_KEY=lm-studio \
-ENABLE_OLLAMA_API=false \
-uvx --python 3.11 open-webui@latest serve
+./start.sh
 ```
 
 Access the web interface at: **http://localhost:8080**
 
-### Using the Start Script
+The script auto-detects if LM Studio is running and configures accordingly.
 
-For convenience, run:
+### Launch Modes
 
-```bash
-./start.sh
-```
+| Mode | Command | Description |
+|------|---------|-------------|
+| **Auto** | `./start.sh` | Auto-detects LM Studio, falls back to standalone |
+| **Standalone** | `./start.sh --standalone` | Cloud APIs only (OpenAI, Anthropic, etc.) |
+| **Local** | `./start.sh --local` | Requires LM Studio running |
 
-## Configuration
+### First-Time Setup
 
-### Connecting to Other APIs
-
-After logging in, add cloud API providers through:
-**Settings** → **Admin Settings** → **Connections**
-
-Supported providers:
-- OpenAI
-- Anthropic
-- Google AI
-- Azure OpenAI
-- Any OpenAI-compatible API
-
-### Changing LM Studio Port
-
-If LM Studio runs on a different port, update the `OPENAI_API_BASE_URL`:
-
-```bash
-OPENAI_API_BASE_URL=http://127.0.0.1:YOUR_PORT/v1
-```
+1. Open **http://localhost:8080**
+2. Create an admin account (first user becomes admin)
+3. Go to **Settings** → **Admin Settings** → **Connections**
+4. Add your API keys (OpenAI, Anthropic, Google AI, etc.)
 
 ## Features
 
-- 💬 Chat with local LLMs via LM Studio
-- 🔑 Bring your own API keys for cloud providers
-- 📁 Upload documents for RAG (Retrieval-Augmented Generation)
-- 👥 Multi-user support with admin controls
-- 💾 Persistent chat history (stored in `~/.open-webui`)
-- 🎨 Beautiful, ChatGPT-like interface
-- 🖼️ Image generation (DALL-E, gpt-image-1, Stable Diffusion)
-- 🎬 **Video generation (Sora)** - Custom addition!
+- ☁️ **Standalone mode** - Works without local models, just add API keys
+- 💻 **Local models** - Connect to LM Studio for offline/private AI
+- 🔑 **Bring your own API keys** - OpenAI, Anthropic, Google AI, Azure, and more
+- 📁 **RAG** - Upload documents for context-aware conversations
+- 👥 **Multi-user** - Admin controls and user management
+- 💾 **Persistent** - Chat history saved in `~/.open-webui`
+- 🎨 **Beautiful UI** - Modern, ChatGPT-like interface
+- 🖼️ **Image generation** - DALL-E, gpt-image-1, Stable Diffusion
+- 🎬 **Video generation** - Sora support (custom feature!)
+
+## Configuration
+
+### Adding Cloud APIs
+
+After logging in as admin:
+**Settings** → **Admin Settings** → **Connections**
+
+Supported providers:
+- OpenAI (GPT-4, GPT-4o, o1, etc.)
+- Anthropic (Claude)
+- Google AI (Gemini)
+- Azure OpenAI
+- Any OpenAI-compatible API
+
+### Using with LM Studio
+
+1. Start LM Studio and enable the local server (default: `http://127.0.0.1:1234`)
+2. Load a model in LM Studio
+3. Run `./start.sh` (auto-detects) or `./start.sh --local`
+
+### Changing LM Studio Port
+
+```bash
+OPENAI_API_BASE_URL=http://127.0.0.1:YOUR_PORT/v1 ./start.sh --local
+```
 
 ## Data Location
 
@@ -75,6 +82,8 @@ All data is stored in `~/.open-webui/`:
 - User accounts
 - Uploaded files
 - Settings
+
+To reset: `rm -rf ~/.open-webui`
 
 ---
 
@@ -159,7 +168,7 @@ VIDEOS_OPENAI_API_KEY=your-api-key
 To use the Sora features, run from the modified source:
 
 ```bash
-cd "/Users/omertekin/Desktop/Grind/BYOM Chat/open-webui-source"
+cd open-webui-source
 
 # Install backend dependencies
 cd backend
@@ -171,7 +180,7 @@ python -m open_webui.main
 
 For the frontend (development mode):
 ```bash
-cd "/Users/omertekin/Desktop/Grind/BYOM Chat/open-webui-source"
+cd open-webui-source
 npm install
 npm run dev
 ```
@@ -205,21 +214,15 @@ npm run dev
 
 ## Troubleshooting
 
-### Models not showing up?
-1. Make sure LM Studio's local server is running
-2. Check that a model is loaded in LM Studio
-3. In Open WebUI, go to **Settings** → **Admin Settings** → **Connections**
+### No models showing?
+1. **Standalone mode**: Add API keys in **Settings** → **Admin Settings** → **Connections**
+2. **Local mode**: Make sure LM Studio is running with a model loaded
 
 ### Video generation not working?
 1. Make sure you have an OpenAI API key with Sora access
 2. Check the API key is configured in **Admin Settings** → **Videos**
 3. Verify `ENABLE_VIDEO_GENERATION` is enabled
 4. Check browser console for errors
-
-### Reset everything
-```bash
-rm -rf ~/.open-webui
-```
 
 ---
 
@@ -234,3 +237,5 @@ docker compose up -d
 Access at: **http://localhost:3000**
 
 Stop with: `docker compose down`
+
+**Note:** By default, Docker runs in standalone mode. To connect to LM Studio, edit `docker-compose.yml` and uncomment the LM Studio environment variables.

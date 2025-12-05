@@ -7,21 +7,25 @@ services:
     volumes:
       - open-webui:/app/backend/data
     environment:
-      # Disable Ollama since we're using LM Studio
+      # Disable Ollama since we're using LM Studio or cloud APIs
       - ENABLE_OLLAMA_API=false
-      # Enable OpenAI API (LM Studio is OpenAI-compatible)
+      # Enable OpenAI API for cloud providers and LM Studio
       - ENABLE_OPENAI_API=true
-      # Point to LM Studio running on host machine
-      - OPENAI_API_BASE_URL=http://host.docker.internal:1234/v1
-      # LM Studio doesn't require an API key, but Open WebUI needs something
-      - OPENAI_API_KEY=lm-studio
       # Allow signup for first user (becomes admin)
       - WEBUI_AUTH=true
+      #
+      # === OPTIONAL: LM Studio Connection ===
+      # Uncomment the lines below if you want to connect to LM Studio:
+      #
+      # - OPENAI_API_BASE_URL=http://host.docker.internal:1234/v1
+      # - OPENAI_API_KEY=lm-studio
+      #
+      # Otherwise, add your API keys through the web UI:
+      # Settings → Admin Settings → Connections
+      #
     extra_hosts:
       - "host.docker.internal:host-gateway"
     restart: unless-stopped
 
 volumes:
   open-webui:
-
-
