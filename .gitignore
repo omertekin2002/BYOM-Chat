@@ -1,5 +1,18 @@
 # Secrets
 .webui_secret_key
+*.pem
+*.key
+*.p12
+
+# Environment files (except examples)
+.env
+.env.*
+!.env.example
+
+# Databases
+*.db
+*.sqlite
+*.sqlite3
 
 # macOS
 .DS_Store
@@ -7,8 +20,9 @@
 .LSOverride
 ._*
 
-# Thumbnails
+# Windows
 Thumbs.db
+Desktop.ini
 
 # IDE
 .idea/
@@ -16,3 +30,11 @@ Thumbs.db
 *.swp
 *.swo
 
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Node
+node_modules/
