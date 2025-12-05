@@ -1,12 +1,77 @@
 #!/bin/bash
 
-# BYOM Chat - Start Script
-# Starts Open WebUI in standalone mode or connected to LM Studio
+# BYOM Chat - Development Start Script
+# Runs from modified source with Sora video generation support
 
-export PATH="$HOME/.local/bin:$PATH"
+set -e
+
+# Use Node 22 (required for frontend build)
+export PATH="/opt/homebrew/opt/node@22/bin:$HOME/.local/bin:$PATH"
 
 # Handle Ctrl+C gracefully
 trap 'echo ""; echo "👋 Shutting down..."; exit 0' INT TERM
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SOURCE_DIR="$SCRIPT_DIR/open-webui-source"
+BACKEND_DIR="$SOURCE_DIR/backend"
+VENV_DIR="$SCRIPT_DIR/.venv"
+
+echo "🚀 BYOM Chat - Development Mode (with Sora)"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+
+# Check if source exists
+if [ ! -d "$SOURCE_DIR" ]; then
+    echo "❌ Error: open-webui-source directory not found"
+    exit 1
+fi
+
+# Check for Python 3.11 (required for compatibility)
+if command -v python3.11 &> /dev/null; then
+    PYTHON_CMD="python3.11"
+elif command -v python3 &> /dev/null; then
+    PYTHON_CMD="python3"
+else
+    echo "❌ Error: Python 3.11 is required"
+    echo "   Install with: brew install python@3.11"
+    exit 1
+fi
+
+# Create virtual environment if it doesn't exist
+if [ ! -d "$VENV_DIR" ]; then
+    echo "📦 Creating virtual environment with Python 3.11 (first time only)..."
+    $PYTHON_CMD -m venv "$VENV_DIR"
+    echo "   ✅ Virtual environment created"
+    echo ""
+fi
+
+# Activate virtual environment
+source "$VENV_DIR/bin/activate"
+
+# Check if backend dependencies are installed
+if [ ! -f "$VENV_DIR/.deps_installed" ]; then
+    echo "📦 Installing backend dependencies (first time only)..."
+    echo "   This may take a few minutes..."
+    cd "$BACKEND_DIR"
+    pip install --upgrade pip -q
+    pip install -r requirements.txt -q
+    touch "$VENV_DIR/.deps_installed"
+    echo "   ✅ Backend dependencies installed"
+    echo ""
+fi
+
+# Check if frontend is built
+if [ ! -d "$SOURCE_DIR/build" ]; then
+    echo "📦 Building frontend (first time only)..."
+    echo "   This may take a few minutes..."
+    cd "$SOURCE_DIR"
+    npm install --legacy-peer-deps
+    npm run build
+    echo "   ✅ Frontend built"
+    echo ""
+fi
+
+cd "$BACKEND_DIR"
 
 # Check if LM Studio is running
 check_lm_studio() {
@@ -14,91 +79,32 @@ check_lm_studio() {
     return $?
 }
 
-# Parse arguments
-MODE="auto"
-while [[ $# -gt 0 ]]; do
-    case $1 in
-        --local|--lm-studio)
-            MODE="local"
-            shift
-            ;;
-        --standalone|--cloud)
-            MODE="standalone"
-            shift
-            ;;
-        --help|-h)
-            echo "BYOM Chat - Bring Your Own Model"
-            echo ""
-            echo "Usage: ./start.sh [OPTIONS]"
-            echo ""
-            echo "Options:"
-            echo "  --local, --lm-studio    Force connection to LM Studio (requires LM Studio running)"
-            echo "  --standalone, --cloud   Run without local models (add API keys in Settings)"
-            echo "  --help, -h              Show this help message"
-            echo ""
-            echo "Without options, auto-detects if LM Studio is running."
-            exit 0
-            ;;
-        *)
-            echo "Unknown option: $1"
-            echo "Use --help for usage information"
-            exit 1
-            ;;
-    esac
-done
-
-echo "🚀 BYOM Chat - Bring Your Own Model"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo ""
-
-# Determine which mode to use
-if [ "$MODE" = "auto" ]; then
-    echo "🔍 Auto-detecting LM Studio..."
-    if check_lm_studio; then
-        MODE="local"
-        echo "   ✅ LM Studio detected at http://127.0.0.1:1234"
-    else
-        MODE="standalone"
-        echo "   ℹ️  LM Studio not detected, running standalone"
-    fi
-    echo ""
-fi
-
-# Build environment based on mode
-if [ "$MODE" = "local" ]; then
-    if ! check_lm_studio; then
-        echo "❌ Error: LM Studio is not running at http://127.0.0.1:1234"
-        echo ""
-        echo "Please either:"
-        echo "  1. Start LM Studio and enable the local server"
-        echo "  2. Run with --standalone flag to use cloud APIs only"
-        exit 1
-    fi
-    
-    echo "📡 Mode: Local + Cloud"
-    echo "   • LM Studio: http://127.0.0.1:1234"
-    echo "   • Add cloud APIs in Settings → Admin Settings → Connections"
-    echo ""
-    
-    EXTRA_ENV="OPENAI_API_BASE_URL=http://127.0.0.1:1234/v1 OPENAI_API_KEY=lm-studio"
+if check_lm_studio; then
+    echo "📡 LM Studio detected at http://127.0.0.1:1234"
+    export OPENAI_API_BASE_URL="http://127.0.0.1:1234/v1"
+    export OPENAI_API_KEY="lm-studio"
 else
-    echo "☁️  Mode: Standalone (Cloud APIs only)"
-    echo "   • Add your API keys in Settings → Admin Settings → Connections"
-    echo "   • Supports: OpenAI, Anthropic, Google AI, Azure, and more"
-    echo ""
-    
-    EXTRA_ENV=""
+    echo "☁️  Running in standalone mode (add API keys in Settings)"
 fi
 
+echo ""
+echo "🎬 Sora video generation: ENABLED"
 echo "🌐 Access the chat at: http://localhost:8080"
 echo "   Press Ctrl+C to stop"
 echo ""
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
-# Start Open WebUI
-exec env \
-    DATA_DIR=~/.open-webui \
-    ENABLE_OLLAMA_API=false \
-    $EXTRA_ENV \
-    uvx --python 3.11 open-webui@latest serve
+# Set data directory
+export DATA_DIR="$HOME/.open-webui"
+export ENABLE_OLLAMA_API="false"
+
+# Generate secret key if not exists
+KEY_FILE="$DATA_DIR/.webui_secret_key"
+if [ ! -f "$KEY_FILE" ]; then
+    head -c 12 /dev/random | base64 > "$KEY_FILE"
+fi
+export WEBUI_SECRET_KEY=$(cat "$KEY_FILE")
+
+# Run the backend with uvicorn
+exec python -m uvicorn open_webui.main:app --host 0.0.0.0 --port 8080

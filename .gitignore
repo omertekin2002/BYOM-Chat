@@ -1,3 +1,6 @@
+# Cursor Rules
+.cursor/rules/
+
 # Secrets
 .webui_secret_key
 *.pem
