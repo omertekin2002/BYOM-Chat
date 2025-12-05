@@ -14,21 +14,26 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 
 ### Start the Chat Interface
 
+**For Sora video generation support**, use:
+```bash
+./start-dev.sh
+```
+
+**For standard use** (no video generation), use:
 ```bash
 ./start.sh
 ```
 
 Access the web interface at: **http://localhost:8080**
 
-The script auto-detects if LM Studio is running and configures accordingly.
+### Launch Scripts
 
-### Launch Modes
-
-| Mode | Command | Description |
-|------|---------|-------------|
-| **Auto** | `./start.sh` | Auto-detects LM Studio, falls back to standalone |
-| **Standalone** | `./start.sh --standalone` | Cloud APIs only (OpenAI, Anthropic, etc.) |
-| **Local** | `./start.sh --local` | Requires LM Studio running |
+| Script | Description |
+|--------|-------------|
+| `./start-dev.sh` | **Recommended** - Runs from source with Sora video generation |
+| `./start.sh` | Runs official Open WebUI (no Sora support) |
+| `./start.sh --standalone` | Cloud APIs only, no LM Studio needed |
+| `./start.sh --local` | Requires LM Studio running |
 
 ### First-Time Setup
 
