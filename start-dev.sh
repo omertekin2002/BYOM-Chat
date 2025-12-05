@@ -33,8 +33,9 @@ fi
 # Check if dependencies are installed
 if [ ! -f "$BACKEND_DIR/.deps_installed" ]; then
     echo "📦 Installing backend dependencies (first time only)..."
+    echo "   This may take a few minutes..."
     cd "$BACKEND_DIR"
-    pip install -r requirements.txt -q
+    python3 -m pip install -r requirements.txt -q
     touch .deps_installed
     echo "   ✅ Dependencies installed"
     echo ""
